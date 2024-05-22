@@ -39,13 +39,11 @@ skipped = []
 counter = 1  # Initialize counter for incrementing filenames
 
 for path in files:
-    # Esc [2J is the VT100 sequence to erase the screen and move the cursor to
-    # the beginning of the line
     if os.path.exists(path):
         filename = os.path.basename(path)
         extension = os.path.splitext(filename)[1]
         base = os.path.splitext(filename)[0]
-        new_filename = f"{counter:03d}_{base}{extension}"
+        new_filename = f"{counter:03d}_{filename}"
         shutil.copy(path, os.path.join(dest, new_filename))
         print(f"\x1b[2J{next(progress)} of {goal} collected!!")
         counter += 1
