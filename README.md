@@ -9,7 +9,7 @@ This script will:
 - Copy them into a new directory. 
 
 
-Now can burn your collection to a CD, or export the playlist for friends. 👍
+Now can burn your collection to a CD, or send the playlist to friends. 👍
 
 
 * * *
