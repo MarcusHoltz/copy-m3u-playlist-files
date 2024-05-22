@@ -11,8 +11,8 @@ import urllib
 try:
     m3ufile = sys.argv.pop(1)
 except IndexError:
-    print("No m3u file given", file=sys.stderr)
-    sys.exit(1)
+    print("No m3u file given, defaulting to playlist.m3u", file=sys.stderr)
+    m3ufile = 'playlist.m3u'
 
 # check for destination arg
 try:
