@@ -1,6 +1,6 @@
-# Copy music files in a playlist for export
+# 🎶 Copy music files in a playlist for export 💿
 
-This script will - collect files in your music playlist, order the songs, and copy them into a new directory. 
+This script will - a collect files in your music playlist, order the songs, and copy them into a new directory. 
 
 Now can burn your collection to a CD, or export the playlist for friends. 👍
 
@@ -20,7 +20,13 @@ The script can, optionally, take two arguments:
 
 * * *
 
-### Example 
+## Examples
+
+
+* * * 
+
+
+### Linux 
 
 Using the bash version of this script as an example, run this Bash script with a command like:
 
@@ -29,7 +35,32 @@ bash copy-m3u-playlist-files-to-directory.sh name-of-playlist.m3u /home/user/Mus
 ```
 
 
+* * * 
+
+### Windows
+
+Run this Powershell version of this script with a command like:
+
+```
+copy-m3u-playlist-files-to-directory.ps1 name-of-your-playlist.m3u C:\path\to\destination\somefolder\
+```
+
+
+* * * 
+
+### Python
+
+To run this as a cross-platform Python script:
+
+```
+python copy-m3u-playlist-files-to-directory.py example-playlist.m3u /path/to/destination
+```
+
+
+* * *
+
+* * *
 
 ## Thanks!
 
-Thanks hope this helps someone also trying to accomplish the same task.
+Thanks hope this helps someone also trying to accomplish the same task. 😎
