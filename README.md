@@ -1,6 +1,13 @@
 # 🎶 Copy music files in a playlist for export 💿
 
-This script will - a collect files in your music playlist, order the songs, and copy them into a new directory. 
+This script will: 
+
+- Collect files in your music playlist
+
+- Order the songs
+
+- Copy them into a new directory. 
+
 
 Now can burn your collection to a CD, or export the playlist for friends. 👍
 
