@@ -1,16 +1,14 @@
 #!/bin/bash
 
 # Run this Bash script with a command like:
-#  bash copy-m3u-playlist-files-to-directory.sh playlist.m3u /home/user/Music/somefiles
+# bash copy-m3u-playlist-files-to-directory.sh playlist.m3u /home/user/Music/somefiles
 
 # Check if an m3u file is provided
 if [ -z "$1" ]; then
     echo "No m3u file given, defaulting to playlist.m3u" >&2
     m3ufile="playlist.m3u"
 fi
-
 m3ufile="$1"
-
 
 # Check for destination argument
 if [ -z "$2" ]; then
@@ -31,9 +29,9 @@ fi
 
 counter=1
 while IFS= read -r line; do
-    line=$(echo "$line" | xargs)  # Trim whitespace
+    line=$(echo "$line" | xargs) # Trim whitespace
     if [[ -n "$line" && "$line" != \#* ]]; then
-        files+=("$(echo -e "${line//%/\\x}")")  # Decode URL encoding
+        files+=("$(echo -e "${line//%/\\x}" | sed "s/'/'\\\\''/g")") # Decode URL encoding and escape apostrophes
     fi
 done < "$m3ufile"
 
