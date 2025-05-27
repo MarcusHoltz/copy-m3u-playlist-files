@@ -61,7 +61,7 @@ copy-m3u-playlist-files-to-directory.ps1 name-of-your-playlist.m3u C:\path\to\de
 To run this as a cross-platform Python script:
 
 ```
-python copy-m3u-playlist-files-to-directory.py example-playlist.m3u /path/to/destination
+python3 copy-m3u-playlist-files-to-directory.py name-of-your-playlist.m3u /path/to/destination
 ```
 
 
