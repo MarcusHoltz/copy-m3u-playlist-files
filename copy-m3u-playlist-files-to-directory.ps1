@@ -1,10 +1,11 @@
 # Run this Powershell script with a command like:
 #  copy-m3u-playlist-files-to-directory.ps1 playlist.m3u C:\path\to\destination\somefolder\
 
-
 param (
     [string]$m3ufile = "playlist.m3u",
-    [string]$dest = "."
+    [string]$dest = ".",
+    [switch]$SkipMissing = $false,
+    [switch]$Verbose = $false
 )
 
 # Function to decode URL-encoded strings
@@ -15,23 +16,70 @@ function Decode-Url {
     return [System.Uri]::UnescapeDataString($url)
 }
 
+# Function to search for files in common locations
+function Find-File {
+    param (
+        [string]$originalPath
+    )
+    
+    # If original path exists, return it
+    if (Test-Path -Path $originalPath) {
+        return $originalPath
+    }
+    
+    # Extract filename
+    $filename = Split-Path -Path $originalPath -Leaf
+    
+    # Search in current directory and subdirectories
+    $found = Get-ChildItem -Path "." -Recurse -Name $filename -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($found) {
+        return (Join-Path -Path (Get-Location) -ChildPath $found)
+    }
+    
+    # Try common music directories if they exist
+    $commonPaths = @(
+        "$env:USERPROFILE\Music",
+        "$env:PUBLIC\Music",
+        "C:\Music",
+        "D:\Music"
+    )
+    
+    foreach ($basePath in $commonPaths) {
+        if (Test-Path -Path $basePath) {
+            $found = Get-ChildItem -Path $basePath -Recurse -Name $filename -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($found) {
+                return (Join-Path -Path $basePath -ChildPath $found)
+            }
+        }
+    }
+    
+    return $null
+}
+
 # Check if m3u file is provided
 if (-not $m3ufile) {
     Write-Error "No m3u file given"
     exit 1
 }
 
+if (-not (Test-Path -Path $m3ufile)) {
+    Write-Error "M3U file '$m3ufile' not found"
+    exit 1
+}
+
 # Create destination directory if it doesn't exist
 if (-not (Test-Path -Path $dest)) {
     New-Item -ItemType Directory -Path $dest | Out-Null
+    Write-Host "Created destination directory: $dest"
 }
 
 $files = @()
 $skipped = @()
+$found = @()
 
 # Read the m3u file and collect file paths
 try {
-    $lines = Get-Content -Path $m3ufile
+    $lines = Get-Content -Path $m3ufile -Encoding UTF8
     foreach ($line in $lines) {
         $line = $line.Trim()
         if ($line -and $line[0] -ne '#') {
@@ -39,37 +87,74 @@ try {
         }
     }
 } catch {
-    Write-Error "File not found."
+    Write-Error "Error reading file '$m3ufile': $($_.Exception.Message)"
     exit 1
 }
 
 $goal = $files.Count
 $progress = 0
-$counter = 1  # Initialize counter for incrementing filenames
+$counter = 1
+
+Write-Host "Processing $goal files from playlist..." -ForegroundColor Green
 
 # Copy files to the destination directory with incrementing numbers
 foreach ($path in $files) {
-    if (Test-Path -Path $path) {
-        $filename = Split-Path -Path $path -Leaf
-        $extension = [System.IO.Path]::GetExtension($filename)
-        $base = [System.IO.Path]::GetFileNameWithoutExtension($filename)
-        $new_filename = "{0}_{1:D3}{2}" -f $counter, $base, $extension
-        Copy-Item -Path $path -Destination (Join-Path -Path $dest -ChildPath $new_filename)
-        $progress++
-        $counter++
-        Write-Host ("`e[2J{0} of {1} collected!!" -f $progress, $goal)
+    $foundPath = Find-File -originalPath $path
+    
+    if ($foundPath) {
+        try {
+            $filename = Split-Path -Path $foundPath -Leaf
+            $extension = [System.IO.Path]::GetExtension($filename)
+            $base = [System.IO.Path]::GetFileNameWithoutExtension($filename)
+            $new_filename = "{0:D3}_{1}{2}" -f $counter, $base, $extension
+            
+            Copy-Item -Path $foundPath -Destination (Join-Path -Path $dest -ChildPath $new_filename) -ErrorAction Stop
+            $progress++
+            $counter++
+            
+            if ($Verbose) {
+                Write-Host "[$progress/$goal] Copied: $filename -> $new_filename" -ForegroundColor Gray
+            } else {
+                Write-Progress -Activity "Copying files" -Status "$progress of $goal files copied" -PercentComplete (($progress / $goal) * 100)
+            }
+            
+            $found += $foundPath
+        } catch {
+            Write-Warning "Failed to copy '$foundPath': $($_.Exception.Message)"
+            $skipped += $path
+        }
     } else {
         $skipped += $path
+        if ($Verbose) {
+            Write-Host "Missing: $(Split-Path -Path $path -Leaf)" -ForegroundColor Yellow
+        }
     }
 }
 
-# Report missing files
-if ($skipped.Count -ne 0) {
-    Write-Error "Missing files:"
-    foreach ($path in $skipped) {
-        Write-Error $path
+Write-Progress -Activity "Copying files" -Completed
+
+# Report results
+Write-Host "`nCopy completed!" -ForegroundColor Green
+Write-Host "Successfully copied: $progress files" -ForegroundColor Green
+
+if ($skipped.Count -gt 0) {
+    Write-Host "Missing files: $($skipped.Count)" -ForegroundColor Yellow
+    
+    if (-not $SkipMissing) {
+        Write-Host "`nMissing files:" -ForegroundColor Yellow
+        foreach ($path in $skipped) {
+            Write-Host "  $path" -ForegroundColor Red
+        }
+        
+        Write-Host "`nTip: Use -SkipMissing to suppress missing file list" -ForegroundColor Cyan
+        Write-Host "Tip: Use -Verbose for detailed copy information" -ForegroundColor Cyan
     }
-    exit 2
+    
+    if ($progress -eq 0) {
+        exit 2
+    }
 } else {
-    Write-Host ("All files collected in {0} directory. Enjoy!" -f $dest)
+    Write-Host "All files found and copied successfully!" -ForegroundColor Green
 }
+
+Write-Host "`nFiles copied to: $dest" -ForegroundColor Cyan
