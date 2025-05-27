@@ -6,7 +6,7 @@ import sys
 from urllib.parse import unquote
 
 # Run this Python script with a command like:
-#  python3 copy-m3u-playlist-files-to-directory.py playlist.m3u /path/to/destination
+#   python3 copy-m3u-playlist-files-to-directory.py playlist.m3u /path/to/destination
 
 # Get m3u file argument
 if len(sys.argv) < 2:
@@ -38,7 +38,7 @@ try:
                     # If URL decoding fails, use the original line
                     files.append(line)
 except IOError:
-    print(f"File not found: {m3ufile}")
+    print(f"File not found: {m3ufile}", file=sys.stderr)
     sys.exit(1)
 
 if not files:
