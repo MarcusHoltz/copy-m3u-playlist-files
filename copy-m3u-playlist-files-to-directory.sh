@@ -7,8 +7,9 @@
 if [ -z "$1" ]; then
     echo "No m3u file given, defaulting to playlist.m3u" >&2
     m3ufile="playlist.m3u"
+else
+    m3ufile="$1"
 fi
-m3ufile="$1"
 
 # Check for destination argument
 if [ -z "$2" ]; then
@@ -28,10 +29,17 @@ if [ ! -f "$m3ufile" ]; then
 fi
 
 counter=1
-while IFS= read -r line; do
-    line=$(echo "$line" | xargs) # Trim whitespace
+while IFS= read -r line || [ -n "$line" ]; do
+    # Remove carriage returns and trim whitespace manually
+    line=$(echo "$line" | tr -d '\r')
+    # Trim leading and trailing whitespace without xargs
+    line="${line#"${line%%[![:space:]]*}"}"  # Remove leading whitespace
+    line="${line%"${line##*[![:space:]]}"}"  # Remove trailing whitespace
+    
     if [[ -n "$line" && "$line" != \#* ]]; then
-        files+=("$(echo -e "${line//%/\\x}" | sed "s/'/'\\\\''/g")") # Decode URL encoding and escape apostrophes
+        # Simple URL decoding for common cases
+        decoded_line=$(printf '%b' "${line//%/\\x}" 2>/dev/null || echo "$line")
+        files+=("$decoded_line")
     fi
 done < "$m3ufile"
 
@@ -42,13 +50,12 @@ progress=0
 for path in "${files[@]}"; do
     if [ -e "$path" ]; then
         filename=$(basename "$path")
-        extension="${filename##*.}"
-        base="${filename%.*}"
-        new_filename="${counter}_${base}.${extension}"
+        # Use printf to format counter with leading zeros
+        new_filename=$(printf "%03d_%s" "$counter" "$filename")
         cp "$path" "$dest/$new_filename"
         ((progress++))
         ((counter++))
-        echo -e "\033[2J${progress} of ${goal} collected!!"
+        printf "Copied %d of %d: %s\n" "$progress" "$goal" "$filename"
     else
         skipped+=("$path")
     fi
