@@ -50,7 +50,7 @@ Run this Powershell version of this script with a command like:
 
 ```
 Unblock-File .\copy-m3u-playlist-files-to-directory.ps1
-copy-m3u-playlist-files-to-directory.ps1 name-of-your-playlist.m3u C:\path\to\destination\somefolder\
+copy-m3u-playlist-files-to-directory.ps1 name-of-your-playlist.m3u C:\path\to\destination\somefolder\ -SkipMissing -Verbose
 ```
 
 
