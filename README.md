@@ -1,4 +1,4 @@
-# 🎶 Copy music files in a playlist for export 💿
+# [ 🎶 ](https://github.com/MarcusHoltz/marcusholtz.github.io/blob/main/assets/html/Internet-Radio-Stations.m3u) Copy music files in a playlist for export [ 💿 ](https://github.com/MarcusHoltz/marcusholtz.github.io/blob/main/assets/html/Internet-Radio-Stations.m3u)
 
 This script will: 
 
