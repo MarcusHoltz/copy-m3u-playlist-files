@@ -70,7 +70,7 @@ python3 copy-m3u-playlist-files-to-directory.py name-of-your-playlist.m3u /path/
 
 ### No playlist order in filenames
 
-To copy your files from the mp3, with the same filenames - no numbers infront to indicate their order in the playlist, add `--no-mixtape` to the script execution. This feature works on all the scripts:
+To copy your files, with the same filenames - no numbers infront to indicate their order in the playlist, add `--no-mixtape` or `-nomixtape` to the script execution. This feature works on all the scripts:
 
 ```
 python3 copy-m3u-playlist-files-to-directory.py --no-mixtape name-of-your-playlist.m3u /path/to/destination
