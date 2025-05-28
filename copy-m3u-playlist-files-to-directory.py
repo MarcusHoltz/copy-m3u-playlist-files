@@ -7,19 +7,33 @@ from urllib.parse import unquote
 
 # Run this Python script with a command like:
 #   python3 copy-m3u-playlist-files-to-directory.py playlist.m3u /path/to/destination
+#   python3 copy-m3u-playlist-files-to-directory.py --no-mixtape playlist.m3u /path/to/destination
+#   python3 copy-m3u-playlist-files-to-directory.py -nomixtape playlist.m3u /path/to/destination
+
+# Parse arguments
+no_mixtape = False
+args = sys.argv[1:]
+
+# Check for --no-mixtape or -nomixtape flags
+if '--no-mixtape' in args:
+    no_mixtape = True
+    args.remove('--no-mixtape')
+elif '-nomixtape' in args:
+    no_mixtape = True
+    args.remove('-nomixtape')
 
 # Get m3u file argument
-if len(sys.argv) < 2:
+if len(args) < 1:
     print("No m3u file given, defaulting to playlist.m3u", file=sys.stderr)
     m3ufile = 'playlist.m3u'
 else:
-    m3ufile = sys.argv[1]
+    m3ufile = args[0]
 
 # Get destination argument
-if len(sys.argv) < 3:
+if len(args) < 2:
     dest = '.'
 else:
-    dest = sys.argv[2]
+    dest = args[1]
     os.makedirs(dest, exist_ok=True)
 
 files = []
@@ -49,14 +63,21 @@ goal = len(files)
 skipped = []
 counter = 1
 
-print(f"Found {goal} files in playlist. Starting copy...")
+mode_text = "without numbering" if no_mixtape else "with numbering"
+print(f"Found {goal} files in playlist. Starting copy ({mode_text})...")
 
 # Copy files to destination
 for i, path in enumerate(files, 1):
     if os.path.exists(path):
         filename = os.path.basename(path)
-        # Create new filename with zero-padded counter
-        new_filename = f"{counter:03d}_{filename}"
+        
+        # Create filename based on --no-mixtape flag
+        if no_mixtape:
+            new_filename = filename
+        else:
+            # Create new filename with zero-padded counter
+            new_filename = f"{counter:03d}_{filename}"
+        
         dest_path = os.path.join(dest, new_filename)
         
         try:

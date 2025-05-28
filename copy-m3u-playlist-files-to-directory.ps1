@@ -1,12 +1,21 @@
 # Run this Powershell script with a command like:
 #  copy-m3u-playlist-files-to-directory.ps1 playlist.m3u C:\path\to\destination\somefolder\
+#  copy-m3u-playlist-files-to-directory.ps1 -nomixtape playlist.m3u C:\path\to\destination\somefolder\
+#  copy-m3u-playlist-files-to-directory.ps1 --no-mixtape playlist.m3u C:\path\to\destination\somefolder\
 
 param (
     [string]$m3ufile = "playlist.m3u",
     [string]$dest = ".",
     [switch]$SkipMissing = $false,
-    [switch]$Verbose = $false
+    [switch]$Verbose = $false,
+    [switch]$nomixtape = $false
 )
+
+# Check for --no-mixtape in $args (PowerShell doesn't handle -- parameters in param block)
+$no_mixtape_flag = $false
+if ($args -contains "--no-mixtape" -or $nomixtape) {
+    $no_mixtape_flag = $true
+}
 
 # Function to decode URL-encoded strings
 function Decode-Url {
@@ -95,25 +104,37 @@ $goal = $files.Count
 $progress = 0
 $counter = 1
 
-Write-Host "Processing $goal files from playlist..." -ForegroundColor Green
+# Display mode information
+$modeText = if ($no_mixtape_flag) { "without numbering" } else { "with numbering" }
+Write-Host "Processing $goal files from playlist ($modeText)..." -ForegroundColor Green
 
-# Copy files to the destination directory with incrementing numbers
+# Copy files to the destination directory
 foreach ($path in $files) {
     $foundPath = Find-File -originalPath $path
     
     if ($foundPath) {
         try {
             $filename = Split-Path -Path $foundPath -Leaf
-            $extension = [System.IO.Path]::GetExtension($filename)
-            $base = [System.IO.Path]::GetFileNameWithoutExtension($filename)
-            $new_filename = "{0:D3}_{1}{2}" -f $counter, $base, $extension
+            
+            # Create filename based on -nomixtape or --no-mixtape parameter
+            if ($no_mixtape_flag) {
+                $new_filename = $filename
+            } else {
+                $extension = [System.IO.Path]::GetExtension($filename)
+                $base = [System.IO.Path]::GetFileNameWithoutExtension($filename)
+                $new_filename = "{0:D3}_{1}{2}" -f $counter, $base, $extension
+            }
             
             Copy-Item -Path $foundPath -Destination (Join-Path -Path $dest -ChildPath $new_filename) -ErrorAction Stop
             $progress++
             $counter++
             
             if ($Verbose) {
-                Write-Host "[$progress/$goal] Copied: $filename -> $new_filename" -ForegroundColor Gray
+                if ($no_mixtape_flag) {
+                    Write-Host "[$progress/$goal] Copied: $filename" -ForegroundColor Gray
+                } else {
+                    Write-Host "[$progress/$goal] Copied: $filename -> $new_filename" -ForegroundColor Gray
+                }
             } else {
                 Write-Progress -Activity "Copying files" -Status "$progress of $goal files copied" -PercentComplete (($progress / $goal) * 100)
             }
@@ -148,6 +169,7 @@ if ($skipped.Count -gt 0) {
         
         Write-Host "`nTip: Use -SkipMissing to suppress missing file list" -ForegroundColor Cyan
         Write-Host "Tip: Use -Verbose for detailed copy information" -ForegroundColor Cyan
+        Write-Host "Tip: Use -nomixtape or --no-mixtape to copy without numbered prefixes" -ForegroundColor Cyan
     }
     
     if ($progress -eq 0) {
