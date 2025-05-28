@@ -24,7 +24,7 @@ The script can, optionally, take three arguments:
 
 - The `--no-mixtape` flag will copy files with their original names (no numbered track prefixes).
 
-> If none is specified, the script defaults to `playlist.m3u` and `current working directory`.
+> If none of this is specified, the script defaults to `playlist.m3u` and `current working directory`.
 
 
 * * *
@@ -42,7 +42,6 @@ Using the bash version of this script as an example, run this Bash script with a
 ```
 bash copy-m3u-playlist-files-to-directory.sh name-of-playlist.m3u /home/user/Music/somefiles
 ```
-
 
 * * * 
 
@@ -65,6 +64,18 @@ To run this as a cross-platform Python script:
 ```
 python3 copy-m3u-playlist-files-to-directory.py name-of-your-playlist.m3u /path/to/destination
 ```
+
+
+* * *
+
+### No playlist order in filenames
+
+To copy your files from the mp3, with the same filenames - no numbers infront to indicate their order in the playlist, add `--no-mixtape` to the script execution. This feature works on all the scripts:
+
+```
+python3 copy-m3u-playlist-files-to-directory.py --no-mixtape name-of-your-playlist.m3u /path/to/destination
+```
+
 
 
 * * *
