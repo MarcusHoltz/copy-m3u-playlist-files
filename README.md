@@ -16,13 +16,15 @@ Now can now burn your collection to a CD, or send the playlist to friends. 👍
 
 ## Using copy-m3u-playlist-files-to-directory
 
-The script can, optionally, take two arguments:
+The script can, optionally, take three arguments:
 
 - The name of the m3u playlist file.
 
 - The location to place the contents of the playlist. 
 
-> If neither is specified, the script defaults to `playlist.m3u` and `current working directory`.
+- The `--no-mixtape` flag will copy files with their original names (no numbered track prefixes).
+
+> If none is specified, the script defaults to `playlist.m3u` and `current working directory`.
 
 
 * * *
