@@ -24,6 +24,7 @@ The script can, optionally, take three arguments:
 
 - The `--no-mixtape` flag will copy files with their original names (no numbered track prefixes).
 
+> [!TIP]
 > If none of this is specified, the script defaults to `playlist.m3u` and `current working directory`.
 
 
