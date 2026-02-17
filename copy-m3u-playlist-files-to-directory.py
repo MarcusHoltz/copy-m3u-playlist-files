@@ -36,23 +36,76 @@ else:
     dest = args[1]
     os.makedirs(dest, exist_ok=True)
 
-files = []
+if not os.path.isfile(m3ufile):
+    print(f"File not found: {m3ufile}", file=sys.stderr)
+    sys.exit(1)
 
+# Detect encoding using stdlib only -- no third-party packages required.
+#
+# Steps:
+# 1. BOM check (raw bytes): catches UTF-8-sig and UTF-16 LE/BE, which are written
+#    by some players and editors and cannot be reliably detected any other way.
+# 2. Try strict UTF-8: if the entire file decodes without error it is valid UTF-8.
+# 3. Fall back to cp1252 (Windows-1252/ANSI): this is the encoding Windows apps
+#    such as Winamp and Windows Media Player use when saving M3U files. It covers
+#    characters like e-umlaut (0xEB) in the Tisto example. cp1252 is built into
+#    Python's stdlib on all platforms.
+# 4. Final fallback to latin-1: maps bytes 0x00-0xFF directly to Unicode U+0000-
+#    U+00FF and never raises a decode error, so it always produces something usable.
+def detect_encoding(file_path):
+    with open(file_path, 'rb') as f:
+        raw = f.read(4)
+
+    # BOM-based detection
+    if raw.startswith(b'\xef\xbb\xbf'):
+        return 'utf-8-sig'
+    if raw.startswith(b'\xff\xfe') or raw.startswith(b'\xfe\xff'):
+        return 'utf-16'
+
+    # Try strict UTF-8 on the whole file
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            f.read()
+        return 'utf-8'
+    except UnicodeDecodeError:
+        pass
+
+    # Try cp1252 (Windows-1252 / ANSI) -- covers most Windows-created M3U files
+    try:
+        with open(file_path, 'r', encoding='cp1252') as f:
+            f.read()
+        return 'cp1252'
+    except UnicodeDecodeError:
+        pass
+
+    # latin-1 never fails on any byte sequence -- safe last resort
+    return 'latin-1'
+
+m3uencoding = detect_encoding(m3ufile)
+
+files = []
 # Read the m3u file
+#
+# errors = for any byte that still cannot be decoded, which is 
+# safer than 'ignore'  -- which silently drops bytes and can corrupt filenames 
+# and if they're corrupted they no longer match what is on disk!
 try:
-    with open(m3ufile, 'r', encoding='utf-8', errors='ignore') as f:
+    with open(m3ufile, 'r', encoding=m3uencoding, errors='replace') as f:
         for line in f:
-            line = line.strip().replace('\r', '')  # Remove carriage returns and whitespace
+            # strip() handles both \r\n (Windows) and \n (Unix) line endings
+            line = line.strip()
             if line and not line.startswith('#'):
                 # URL decode the line
                 try:
-                    decoded_line = unquote(line)
+                    # Pass the same encoding to unquote so %XX sequences in
+                    # the path are decoded with the correct character set
+                    decoded_line = unquote(line, encoding=m3uencoding)
                     files.append(decoded_line)
                 except Exception:
                     # If URL decoding fails, use the original line
                     files.append(line)
 except IOError:
-    print(f"File not found: {m3ufile}", file=sys.stderr)
+    print(f"Could not open file: {m3ufile}", file=sys.stderr)
     sys.exit(1)
 
 if not files:
@@ -77,11 +130,11 @@ for i, path in enumerate(files, 1):
         else:
             # Create new filename with zero-padded counter
             new_filename = f"{counter:03d}_{filename}"
-        
+
         dest_path = os.path.join(dest, new_filename)
-        
+
         try:
-            shutil.copy2(path, dest_path)  # copy2 preserves metadata
+            shutil.copy2(path, dest_path)  # copy2 preserves file metadata
             print(f"Copied {i} of {goal}: {filename}")
             counter += 1
         except Exception as e:
