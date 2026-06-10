@@ -120,17 +120,22 @@ mode_text = "without numbering" if no_mixtape else "with numbering"
 print(f"Found {goal} files in playlist. Starting copy ({mode_text})...")
 
 # Copy files to destination
+os.makedirs(dest, exist_ok=True)
 for i, path in enumerate(files, 1):
+    playlist_dir = os.path.dirname(os.path.abspath(m3ufile))
+
+    #checks if path is relative and if so, joins path to the abspath of the playlist
+    if not os.path.isabs(path):
+        path = os.path.join(playlist_dir, path)
     if os.path.exists(path):
-        filename = os.path.basename(path)
-        
+        filename = os.path.basename(path)        
         # Create filename based on --no-mixtape flag
         if no_mixtape:
             new_filename = filename
         else:
             # Create new filename with zero-padded counter
             new_filename = f"{counter:03d}_{filename}"
-
+        print(new_filename)
         dest_path = os.path.join(dest, new_filename)
 
         try:
@@ -152,3 +157,4 @@ if skipped:
     sys.exit(2)
 else:
     print(f"\nAll {goal} files successfully collected in '{dest}' directory. Enjoy!")
+
