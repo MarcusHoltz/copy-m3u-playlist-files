@@ -120,10 +120,21 @@ mode_text = "without numbering" if no_mixtape else "with numbering"
 print(f"Found {goal} files in playlist. Starting copy ({mode_text})...")
 
 # Copy files to destination
+os.makedirs(dest, exist_ok=True)
+
+# Relative entries in a playlist are written relative to the playlist file
+# itself, so resolve them against the m3u's directory -- not the current
+# working directory. (Credit: lettherebethrash)
+playlist_dir = os.path.dirname(os.path.abspath(m3ufile))
+
 for i, path in enumerate(files, 1):
+    # Resolve relative paths against the playlist's own location
+    if not os.path.isabs(path):
+        path = os.path.join(playlist_dir, path)
+
     if os.path.exists(path):
         filename = os.path.basename(path)
-        
+
         # Create filename based on --no-mixtape flag
         if no_mixtape:
             new_filename = filename

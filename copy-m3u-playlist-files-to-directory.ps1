@@ -92,7 +92,20 @@ function Get-FileEncoding {
 # the cmdlet return strings instead of objects; the filename was being passed as a
 # stray positional argument, not a name filter. Fixed with Where-Object.
 function Find-File {
-    param ([string]$originalPath)
+    param (
+        [string]$originalPath,
+        [string]$playlistDir
+    )
+
+    # Relative entries in a playlist are written relative to the playlist file
+    # itself, so resolve them against the m3u's directory -- not the current
+    # working directory. (Credit: lettherebethrash)
+    if ($playlistDir -and -not [System.IO.Path]::IsPathRooted($originalPath)) {
+        $candidate = Join-Path -Path $playlistDir -ChildPath $originalPath
+        if (Test-Path -LiteralPath $candidate) {
+            return $candidate
+        }
+    }
 
     # If original path exists, return it
     if (Test-Path -LiteralPath $originalPath) {
@@ -179,6 +192,9 @@ if ($goal -eq 0) {
 $progress = 0
 $counter  = 1
 
+# Directory the playlist lives in -- used to resolve relative entries
+$playlistDir = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetFullPath($m3ufile))
+
 # Display mode information
 $modeText = if ($no_mixtape_flag) { "without numbering" } else { "with numbering" }
 Write-Host "Processing $goal files from playlist ($modeText)..." -ForegroundColor Green
@@ -186,7 +202,7 @@ Write-Host "Processing $goal files from playlist ($modeText)..." -ForegroundColo
 # Copy files to the destination directory
 foreach ($path in $files) {
 
-    $foundPath = Find-File -originalPath $path
+    $foundPath = Find-File -originalPath $path -playlistDir $playlistDir
 
     if ($foundPath) {
         try {

@@ -81,8 +81,23 @@ python3 copy-m3u-playlist-files-to-directory.py --no-mixtape name-of-your-playli
 
 * * *
 
+### Playlists that use relative paths
+
+Some players export playlists with paths that are *relative* to the playlist file rather than absolute. So, all three scripts resolve relative entries against the playlist's own directory.
+
+```
+python3 copy-m3u-playlist-files-to-directory.py /some/where/exported.m3u /path/to/destination
+```
+
+The destination directory is also created automatically if it does not already exist.
+
+
+* * *
+
 * * *
 
 ## Thanks!
 
 Thanks hope this helps someone also trying to accomplish the same task. 😎
+
+And thanks to [lettherebethrash](https://github.com/lettherebethrash) for contributing relative-path resolution.

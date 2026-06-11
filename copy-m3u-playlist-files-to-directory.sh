@@ -139,8 +139,22 @@ fi
 
 echo "Found $goal files in playlist. Starting copy ($mode_text)..."
 
+# Ensure the destination exists (handles the default "." case too)
+mkdir -p "$dest"
+
+# Relative entries in a playlist are written relative to the playlist file
+# itself, so resolve them against the m3u's directory -- not the current
+# working directory. (Credit: lettherebethrash)
+playlist_dir=$(cd "$(dirname "$m3ufile")" && pwd)
+
 # Copy files to the destination directory
 for path in "${files[@]}"; do
+    # Resolve relative paths against the playlist's own location
+    case "$path" in
+        /*) ;;  # already an absolute path
+        *)  path="$playlist_dir/$path" ;;
+    esac
+
     if [ -e "$path" ]; then
         # basename -- guards against filenames beginning with a dash
         filename=$(basename -- "$path")
